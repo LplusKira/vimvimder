@@ -143,7 +143,7 @@ set fileencoding=utf-8
 
 " vvv make a mark on column 80, with lightblue color
 set colorcolumn=80
-highlight ColorColumn ctermbg=lightblue guibg=lightblue
+highlight ColorColumn ctermbg=66 guibg=lightblue
 highlight Normal ctermbg=Black
 syntax enable
 " ^^^ make a mark on column 80, with lightblue color
