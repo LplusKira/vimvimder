@@ -1,0 +1,226 @@
+scriptencoding utf-8
+"
+"   ██╗   ██╗ ██╗ ███╗   ███╗ ██████╗   ██████╗
+"   ██║   ██║ ██║ ████╗ ████║ ██╔══██╗ ██╔════╝
+"   ██║   ██║ ██║ ██╔████╔██║ ██████╔╝ ██║
+"   ╚██╗ ██╔╝ ██║ ██║╚██╔╝██║ ██╔══██╗ ██║
+" ██╗╚████╔╝  ██║ ██║ ╚═╝ ██║ ██║  ██║ ╚██████╗
+" ╚═╝ ╚═══╝   ╚═╝ ╚═╝     ╚═╝ ╚═╝  ╚═╝  ╚═════╝
+"
+
+" Index
+" - <PluginsManager>
+" - <AddVimPlugins>
+" - <NonPlugins>
+" - <Aliases>
+" - <Brief-help>
+" - <Rmk>
+
+" <PluginsManager> Use Vundle (acronym for Vim bundle), a Vim plugin manager
+                              " ref: https://github.com/VundleVim/Vundle.vim
+set nocompatible              " Do NOT make vim compatible with vi
+set clipboard=unnamed         " Need this on mac
+                              " Ref: https://stackoverflow.com/a/680271
+filetype off                  " required -- Vundle
+
+set rtp+=~/.vim/bundle/Vundle.vim " set the runtime path (rtp) to include Vundle and initialize
+
+
+" vvv <AddVimPlugins>
+call vundle#begin()           " accompanied w\ vundle#end()
+Plugin 'leafgarland/typescript-vim' " typescript
+Plugin 'gmarik/Vundle.vim'    " only vundle conquers vundle
+Plugin 'tmhedberg/SimpylFold' " for python's class/function folding
+Plugin 'scrooloose/nerdtree'  " awesome file sys explorer
+autocmd vimenter * NERDTree   " open NERDTree automatically when vim starts up
+let NERDTreeShowHidden=1
+Plugin 'jistr/vim-nerdtree-tabs' " no need to quit twice in NERDTree, note that it's not maintained
+Plugin 'tpope/vim-fugitive'   " Git wrapper in vim (works well in Gstatus, Gcommit, Gdiff...)
+Plugin 'derekwyatt/vim-scala' " bundle for scala
+Plugin 'vim-syntastic/syntastic' " install flake8 to lint python codes
+                              " ref: http://flake8.pycqa.org/en/latest/index.html#quickstart
+Plugin 'mattn/emmet-vim'      " html autocomplete
+let g:user_emmet_mode='a'
+let g:user_emmet_install_global = 0
+autocmd FileType html,css EmmetInstall
+                              " vvv integration with eslint
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_javascript_checkers = ['eslint']
+let g:syntastic_javascript_eslint_exe = '$(npm bin)/eslint --ignore-path .eslintignore .'
+                              " ^^^ integration with eslint
+
+Plugin 'ycm-core/YouCompleteMe' "auto-completion
+                              " need to follow (long trip): https://github.com/Valloric/YouCompleteMe
+
+Plugin 'easymotion/vim-easymotion'
+
+Plugin 'Chiel92/vim-autoformat'
+
+Plugin 'pangloss/vim-javascript' " syntax highlighting and improved indentation
+Plugin 'maxmellon/vim-jsx-pretty'
+Plugin 'joegesualdo/jsdoc.vim' " never use this: https://github.com/heavenshell/vim-jsdoc/issues/73
+                               " it cant coexist with .vimrc
+
+Plugin 'ludovicchabant/vim-gutentags' " ctags required
+                                      " https://medium.com/@kuiro5/best-way-to-set-up-ctags-with-neovim-37be99c1bd11
+                                      " https://github.com/universal-ctags/ctags/blob/master/docs/autotools.rst
+Plugin 'scrooloose/vim-slumlord'
+
+call vundle#end()            " accompanied w\ vundle#begin()
+filetype plugin indent on    " required -- Vundle
+
+" ^^^ <AddVimPlugins>
+
+
+
+" vvv <NonPlugins>
+let mapleader = "rr" " our Leader is rr
+let g:user_emmet_leader_key='rr' " for emmet plugin only
+
+syntax on
+
+" vvv some indispensible numbers
+set number
+set relativenumber
+" ^^^ some indispensible numbers
+
+" vvv where indent should take place
+set smartindent
+set smarttab
+set cindent
+set tabstop=4
+set shiftwidth=2
+set expandtab
+" ^^^ where indent should take place
+
+set backspace=2               " dealing w\ backspace problem
+                              " ref: http://vim.wikia.com/wiki/Backspace_and_delete_problems
+
+" vvv Keep X commands in history
+" Ref: https://blog.sourcerer.io/making-vim-great-again-cdfbc281428b
+set history=100            
+if has('gui_running')
+  set guifont=Consolas:h16
+endif
+" ^^^ Keep X commands in history
+
+" vvv use 'built-in' folding method from vim
+set foldmethod=syntax
+set foldlevelstart=1
+set foldnestmax=2             " For, at least, python's methods in Class
+let javaScript_fold=1         " JavaScript
+let sh_fold_enabled=1         " sh
+autocmd BufWinLeave *.* mkview
+autocmd BufWinEnter *.* silent loadview
+" ^^^ use 'built-in' folding method from vim
+
+" vvv ignore some flake8 Errors
+" E501 line too long -- sometimes life's not a bed of roses
+" E402 module import not at top level -- no import from parent dirs?
+" F812 list comprehension redefines sth -- so far np with this
+let g:syntastic_python_flake8_args='--ignore=E501,E402,F812,E722'
+" ^^^ ignore some flake8 Errors
+
+" vvv Add persistent undo
+if has('persistent_undo')      "check if your vim version supports it
+  set undofile                 "turn on the feature
+  set undodir=$HOME/.vim/undo  "directory where the undo files will be stored
+  endif
+" ^^^ Add persistent undo
+
+set autoread                   " reload files changed outside vim
+
+" vvv utf-8 encoding
+set encoding=utf-8
+set fileencoding=utf-8
+" ^^^ utf-8 encoding
+
+" vvv make a mark on column 80, with lightblue color
+set colorcolumn=80
+highlight ColorColumn ctermbg=lightblue guibg=lightblue
+highlight Normal ctermbg=Black
+syntax enable
+" ^^^ make a mark on column 80, with lightblue color
+
+" vvv for easymotion/vim-easymotion
+" <Leader>f{char} to move to {char}
+map  <Leader>f <Plug>(easymotion-bd-f)
+nmap <Leader>f <Plug>(easymotion-overwin-f)
+
+" s{char}{char} to move to {char}{char}
+nmap s <Plug>(easymotion-overwin-f2)
+
+" Move to line
+map <Leader>L <Plug>(easymotion-bd-jk)
+nmap <Leader>L <Plug>(easymotion-overwin-line)
+
+" Move to word
+map  <Leader>w <Plug>(easymotion-bd-w)
+nmap <Leader>w <Plug>(easymotion-overwin-w)
+" ^^^ for easymotion/vim-easymotion
+
+" vvv <Leader>cw search the current pattern in the next window
+nnoremap <Leader>cw :let @/=expand("<cword>")<Bar>wincmd w<Bar>normal n<CR>
+" ^^^ <Leader>cw search the current pattern in the next window
+
+" vvv For java
+nmap <leader>cc :!javac %<Return>
+" ^^^ For java
+
+augroup quickfix
+    autocmd!
+    autocmd QuickFixCmdPost [^l]* cwindow
+    autocmd QuickFixCmdPost l* lwindow
+augroup END
+
+" vvv toggle paste/nopaste
+nnoremap ,, :set nopaste!<Return>
+" ^^^ toggle paste/nopaste
+
+set shortmess+=c
+
+set hlsearch " To highlight all search matches across windows
+" ^^^ <NonPlugins>
+
+
+" <Aliases>
+" vvv Leave a 'clean' interface for tmux's copy
+command! QQR set nonu! norelativenumber!
+command! GGR set nonu! norelativenumber! | NERDTreeToggle
+" ^^^ Leave a 'clean' interface for tmux's copy
+
+command! Hi set nohlsearch! " toggle search highlight through :Hi
+
+" vv set hilight color; i love blue <3
+hi Search cterm=NONE ctermbg=blue
+hi Normal guibg=NONE ctermbg=NONE
+" ^^ set hilight color; i love blue <3
+
+command! Pa set nopaste! " toggle paste/nopaste
+
+" vv make html tidy
+command! TT :%!tidy -q -i --show-errors 0
+                        " Prerequisite -- https://github.com/htacg/tidy-html5/blob/next/README/BUILD.md
+" ^^ make html tidy
+
+" vv spelling
+command! SS :setlocal spell spelllang=en_us
+" ^^ spelling
+
+
+" <Brief-help>
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+" see :h vundle for more details or wiki for FAQ
+
+
+" <Rmk>
+" - For plugins, each one's README is in ~/.vim/bundle/theAwesomePluginName
