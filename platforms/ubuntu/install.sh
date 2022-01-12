@@ -1,5 +1,6 @@
 #!/bin/bash
-set -euo pipefail
+# TODO(po-kai): 'sudo' on proper places
+set -exuo pipefail
 
 # Check local vimrc's download
 function replace_vimrc() {
@@ -22,10 +23,30 @@ function vim_supports_python() {
 function install_YCM() {
   # Ref: https://github.com/ycm-core/YouCompleteMe
   # Note: there's A LOT of places that might fail you here
+  local password=$1
+
+  # Cmake troubles
+  echo $password | sudo -S apt-get purge -y cmake
+  local version="3.22.1"
+  cwd=`pwd`
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  cd $tmp_dir
+  wget https://github.com/Kitware/CMake/releases/download/v$version/cmake-$version.tar.gz
+  tar -xzvf cmake-$version.tar.gz
+  cd cmake-$version/
+  ./bootstrap
+  echo $password | sudo -S make
+  echo $password | sudo -S make install
+  cd $cwd
+
+  # G++8
+  echo $password | sudo -S apt-get install -y g++-8
+  echo $password | sudo -S update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+  echo $password | sudo -S update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 
   # Dependencies
-  apt install -y build-essential cmake vim-nox python3-dev
-  apt install -y mono-complete golang nodejs default-jdk npm
+  echo $password | sudo -S apt install -y build-essential vim-nox python3-dev
+  echo $password | sudo -S apt install -y mono-complete golang nodejs default-jdk npm
 
   # Compile YCM (YouCompleteMe)
   ## If having cert error, check https://github.com/LplusKira/vimvimder/issues/1
@@ -37,11 +58,15 @@ function install_YCM() {
 # Install tidy
 function install_tidy() {
   ### Ref: https://github.com/htacg/tidy-html5/blob/next/README/BUILD.md
+  cwd=`pwd`
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  cd $tmp_dir
   git clone https://github.com/htacg/tidy-html5.git
   cd tidy-html5/build/cmake
   cmake ../.. -DCMAKE_BUILD_TYPE=Release
-  make
-  make install
+  echo $password | sudo -S make
+  echo $password | sudo -S make install
+  cd $cwd
 }
 
 # Install flake8
@@ -49,14 +74,20 @@ function install_flake8() {
   pip3 install flake8
 }
 
+# Read in pwd
+echo "Enter your password: "
+read -s password
+
 # Complete dependencies
 ## - Prerequisites git, curl, python3, my .vimrc
-apt-get update -y
-apt-get install -y git python3 curl cmake
-## - Install proper-ver vim
-add-apt-repository -y ppa:jonathonf/vim
-apt update -y
-apt install -y vim
+echo $password | sudo -S apt-get update -y
+echo $password | sudo -S apt-get install -y git python3 curl cmake
+## - Install 8.2-ver vim
+echo $password | sudo -S add-apt-repository -y ppa:jonathonf/vim
+echo $password | sudo -S apt update -y
+echo $password | sudo -S apt install -y vim
+## - Change owner
+echo $password | sudo -S chown -R $USER "$HOME/.vim*"
 ## - Overwrite vimrc
 replace_vimrc
 
@@ -66,7 +97,7 @@ vim +PluginInstall +qall
 
 # Install specials
 ## - YCM
-install_YCM
+install_YCM $password
 ## - tidy
 install_tidy
 ## - flake8
